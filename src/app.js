@@ -9,6 +9,9 @@ app.get('/profile',(req,res)=>{
 app.get('/test',(req,res)=>{
     res.send("No test cases are assigned yet");
 });
+app.get('/contact',(req,res)=>{
+    res.send("contact us at");
+});
 app.listen(7777,()=>{
     console.log("Server is running on port 7777");
 });
