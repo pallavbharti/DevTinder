@@ -5,7 +5,9 @@ exports.app = app;
 const User = require('./models/user');
 const { validateSignUpData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
-
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
+const jwt = require("jsonwebtoken");
 
 app.use(express.json());
 // POST /signup (Signup) – validation + sanitization: 
