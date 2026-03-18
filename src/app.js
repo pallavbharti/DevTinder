@@ -3,23 +3,58 @@ const connectDB = require('./config/database');
 const app = express();
 exports.app = app;
 const User = require('./models/user');
+const { validateSignUpData } = require("./utils/validation");
+const bcrypt = require("bcrypt");
+
 
 app.use(express.json());
-// app.get('/user', async (req,res)=>{
-//     const userEmail = req.body.email;
-//     try{
-//         const users = await User.find({email:userEmail});
-//         if(users.length === 0)
-//         {
-//             res.status(404).send({message: "User not found"});
-//         }
-//         else{
-//             res.status(200).send({message:"User found", user:users});
-//         }
-//     }catch(err){
-//         res.status(400).send({message:"Error fetching user", error:err.message});
-//     }
-// })
+// POST /signup (Signup) – validation + sanitization: 
+app.post("/signup", async (req,res)=>{
+
+ try{
+
+   validateSignUpData(req);
+
+   const { firstName, lastName, emailId, password } = req.body;
+
+   const passwordHash = await bcrypt.hash(password,10);
+
+   const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash
+   });
+
+   await user.save();
+
+   res.send("User Added Successfully");
+
+ }catch(err){
+
+   res.status(400).send("ERROR : " + err.message);
+
+ }
+
+})
+// Post /Login (Login) – validation + sanitization:
+app.post("/login",async(req,res)=>{
+  try{
+    const{emailId,password}=req.body;
+    const user = await User.findOne({emailId:emailId});
+    if(!user){
+      throw new Error("Invalid credentials");
+    }
+    const ispasswordValid = await bcrypt.compare(password,user.password);
+    if(!ispasswordValid){
+      throw new Error("Invalid credentials");
+    }
+    res.send("Login successful");
+  } catch (err) {
+    res.status(400).send("ERROR : " + err.message);
+  }
+});
+
 app.get('/feed',async(req,res)=>{
     try{
         const users = await User.find({});
@@ -91,6 +126,68 @@ app.patch("/user",async(req,res)=>{
         res.status(400).send("Error updating user");
     }
 });
+
+//  POST /user (Signup) – validation + sanitization
+const { body, validationResult } = require("express-validator");
+
+app.post(
+  "/user",
+  [
+    body("name").trim().notEmpty(),
+    body("email").isEmail().normalizeEmail(),
+    body("password").isLength({ min: 6 }),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).send("Invalid input");
+    }
+
+    const user = new User(req.body);
+    try {
+      await user.save();
+      res.status(200).send("user added successfully");
+    } catch (err) {
+      res.status(400).send("Error adding user");
+    }
+  }
+);
+app.post("/signup",async(req,res)=>{
+  const user = new User(req.body);
+  try{
+    await user.save();
+    res.status(200).send("user added successfully");
+  }catch(err){
+    res.status(400).send("error while saving nthe user", err.message);
+  }
+})
+//  PATCH /user (Update) – API level validation
+app.patch(
+  "/user",
+  [
+    body("name").optional().trim().notEmpty(),
+    body("email").optional().isEmail().normalizeEmail(),
+    body("password").optional().isLength({ min: 6 }),
+  ],
+  async (req, res) => {
+    const userId = req.body.id;
+    const data = req.body;
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).send("Invalid input");
+    }
+
+    try {
+      const user = await User.findByIdAndUpdate(userId, data, {
+        returnDocument: "after",
+      });
+      res.send("User updated successfully");
+    } catch (err) {
+      res.status(400).send("Error updating user");
+    }
+  }
+);
 connectDB().then(()=>{
     console.log("Database connected successfully");
     app.listen(7777,()=>{
