@@ -51,11 +51,64 @@ app.post("/login",async(req,res)=>{
     if(!ispasswordValid){
       throw new Error("Invalid credentials");
     }
+     //  STEP — JWT token create
+     const token = jwt.sign({_id:user._id},
+      "DEV@Tinder$790");
+     console.log("TOKEN:", token);
+
+       //  STEP — cookie me store karo
+    res.cookie("token", token);
+    
     res.send("Login successful");
   } catch (err) {
     res.status(400).send("ERROR : " + err.message);
   }
 });
+/*Client → request /profile
+        ↓
+Cookie automatically bheji jaati hai
+        ↓
+Server → token read karta hai
+        ↓
+JWT verify karta hai
+        ↓
+User ID milti hai
+        ↓
+Database se user fetch
+        ↓
+Response bhejta hai*/ 
+app.get("/profile",async(req,res)=>{
+  try{
+    // STEP 1 — cookie read karo
+    const cookies = req.cookies;
+
+    const { token } = cookies;
+
+    if (!token) {
+      throw new Error("Please login");
+    }
+    //  STEP 2 — JWT verify karo
+    const decodedMessage = jwt.verify(token, "DEV@Tinder$790");
+
+    const { _id } = decodedMessage;
+
+    console.log("Logged In User ID:", _id);
+
+    //  STEP 3 — user database se nikalo
+    const user = await User.findById(_id);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    //  STEP 4 — response bhejo
+    res.send(user);
+
+  } catch (err) {
+    res.status(400).send("ERROR : " + err.message);
+  }
+});
+  
 
 app.get('/feed',async(req,res)=>{
     try{
