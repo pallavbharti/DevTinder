@@ -8,6 +8,7 @@ const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
 const jwt = require("jsonwebtoken");
+const {userAuth} = require("./middlewares/auth");
 
 app.use(express.json());
 // POST /signup (Signup) – validation + sanitization: 
@@ -40,26 +41,37 @@ app.post("/signup", async (req,res)=>{
 
 })
 // Post /Login (Login) – validation + sanitization:
-app.post("/login",async(req,res)=>{
-  try{
-    const{emailId,password}=req.body;
-    const user = await User.findOne({emailId:emailId});
-    if(!user){
-      throw new Error("Invalid credentials");
-    }
-    const ispasswordValid = await bcrypt.compare(password,user.password);
-    if(!ispasswordValid){
-      throw new Error("Invalid credentials");
-    }
-     //  STEP — JWT token create
-     const token = jwt.sign({_id:user._id},
-      "DEV@Tinder$790");
-     console.log("TOKEN:", token);
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
 
-       //  STEP — cookie me store karo
-    res.cookie("token", token);
+    const user = await User.findOne({ emailId });
+
+    if (!user) {
+      throw new Error("Invalid credentials");
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      throw new Error("Invalid credentials");
+    }
+
+    //  STEP 1 — JWT token called from helper function
+    const token = await user.getJWT();
     
+
+    console.log("TOKEN:", token);
+
+    //  STEP 2 — cookie me store karo (secure way)
+    res.cookie("token", token, {
+      expires: new Date(Date.now() + 8 * 3600000), // 8 hours
+      httpOnly: true, // JS access nahi kar paayega (secure)
+    });
+
+    // STEP 3 — response
     res.send("Login successful");
+
   } catch (err) {
     res.status(400).send("ERROR : " + err.message);
   }
@@ -77,7 +89,7 @@ User ID milti hai
 Database se user fetch
         ↓
 Response bhejta hai*/ 
-app.get("/profile",async(req,res)=>{
+app.get("/profile",userAuth, async(req,res)=>{
   try{
     // STEP 1 — cookie read karo
     const cookies = req.cookies;
@@ -95,12 +107,7 @@ app.get("/profile",async(req,res)=>{
     console.log("Logged In User ID:", _id);
 
     //  STEP 3 — user database se nikalo
-    const user = await User.findById(_id);
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
+    const user = req.user; // userAuth middleware se milta hai
     //  STEP 4 — response bhejo
     res.send(user);
 
@@ -108,6 +115,23 @@ app.get("/profile",async(req,res)=>{
     res.status(400).send("ERROR : " + err.message);
   }
 });
+/*Login
+ ↓
+JWT token create
+ ↓
+Cookie me store
+ ↓
+Profile hit
+ ↓
+Middleware run
+ ↓
+Token verify
+ ↓
+User fetch (findById)
+ ↓
+req.user set
+ ↓
+Route me use*/ 
   
 
 app.get('/feed',async(req,res)=>{
