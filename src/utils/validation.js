@@ -17,7 +17,22 @@ const validateSignUpData = (req) => {
     }
 
 }
+const validateEditProfileData = (req) => {
+    const allowedValidFields = ["firstName", "lastName", "emailId", "skills", "photoUrl"];
 
+    const fields = Object.keys(req.body);
+
+    const isAllowedValidFields = fields.every((field) =>
+        allowedValidFields.includes(field)
+    );
+
+    if (!isAllowedValidFields) {
+        throw new Error("Invalid fields in data");
+    }
+
+    return true;
+};
 module.exports = {
-    validateSignUpData
+    validateSignUpData,
+    validateEditProfileData
 }
