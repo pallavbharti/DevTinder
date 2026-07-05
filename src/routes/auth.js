@@ -11,7 +11,6 @@ authRouter.post("/signup", async (req, res) => {
     validateSignUpData(req);
 
     const { firstName, lastName, emailId, password } = req.body;
-
     const passwordHash = await bcrypt.hash(password, 10);
 
     const user = new User({
@@ -23,7 +22,14 @@ authRouter.post("/signup", async (req, res) => {
 
     await user.save();
 
-    res.send("User Added Successfully");
+    const token = await user.getJWT();
+
+    res.cookie("token", token, {
+      expires: new Date(Date.now() + 8 * 3600000),
+      httpOnly: true,
+    });
+
+    res.json({ data: user, message: "User Added Successfully" });
 
   } catch (err) {
     res.status(400).send("ERROR : " + err.message);
@@ -50,7 +56,7 @@ authRouter.post("/login", async (req, res) => {
       httpOnly: true,
     });
 
-    res.send("Login successful");
+    res.send(user);
 
   } catch (err) {
     res.status(400).send("ERROR : " + err.message);
