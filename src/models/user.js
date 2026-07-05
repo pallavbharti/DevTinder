@@ -48,12 +48,10 @@ userSchema.index({firstName:1, lastName:1, emailId:1}, {unique: true});
 userSchema.methods.getJWT = async function () {
   const user =  this;
   const token = jwt.sign(
-      { _id: user._id },
-      "DEV@Tinder$790",
-      {
-        expiresIn: "7d", // token valid for 7 days
-      }
-    );
+  { _id: user._id },
+  process.env.JWT_SECRET,
+  { expiresIn: "7d" }
+);
   return token;
 
 }
