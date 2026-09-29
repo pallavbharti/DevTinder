@@ -1,4 +1,13 @@
-const { socket } = require("socket.io");
+const { Server } = require("socket.io");
+const crypto = require("crypto");
+const Chat = require("../models/chat");
+
+const getSecretRoomId = (userId, targetUserId) => {
+  return crypto
+    .createHash("sha256")
+    .update([userId, targetUserId].sort().join("_"))
+    .digest("hex");
+};
 
 const initializeSocket = (server) => {
   const io = new Server(server, {
@@ -11,22 +20,53 @@ const initializeSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
-    // User chat room mein join karta hai
+    // Join chat room
     socket.on("joinChat", ({ userId, targetUserId, firstName }) => {
-      // Room ID — dono users ka combined ID (sorted taaki same room mile)
-      const roomId = [userId, targetUserId].sort().join("_");
+      const roomId = getSecretRoomId(userId, targetUserId);
+
       console.log(firstName + " joined room: " + roomId);
+
       socket.join(roomId);
     });
 
-    // Message bhejta hai
-    socket.on("sendMessage", ({ userId, targetUserId, firstName, lastName, text }) => {
-      const roomId = [userId, targetUserId].sort().join("_");
-      console.log(firstName + " sent: " + text);
+    // Send message
+    socket.on(
+      "sendMessage",
+      async ({ userId, targetUserId, firstName, lastName, text }) => {
+        try {
+          const roomId = getSecretRoomId(userId, targetUserId);
 
-      // Doosre ko message bhejo
-      io.to(roomId).emit("messageReceived", { firstName, lastName, text });
-    });
+          let chat = await Chat.findOne({
+            participants: {
+              $all: [userId, targetUserId],
+            },
+          });
+
+          if (!chat) {
+            chat = new Chat({
+              participants: [userId, targetUserId],
+              messages: [],
+            });
+          }
+
+          chat.messages.push({
+            senderId: userId,
+            text,
+          });
+
+          await chat.save();
+
+          io.to(roomId).emit("messageReceived", {
+            firstName,
+            lastName,
+            text,
+            timestamp: new Date(),
+          });
+        } catch (err) {
+          console.error("Error sending message:", err);
+        }
+      }
+    );
 
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);

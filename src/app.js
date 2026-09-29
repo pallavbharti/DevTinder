@@ -14,6 +14,8 @@ const {initializeSocket}= require("./utils/socket");
 const http = require("http");
 const server = http.createServer(app);
 initializeSocket(server);
+const chatRouter = require("./routes/chat");
+
 
 app.use(cors({
   origin: "http://localhost:5173",
@@ -26,6 +28,8 @@ app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
+app.use("/", chatRouter);
+
 
 app.get("/", (req, res) => {
   try {

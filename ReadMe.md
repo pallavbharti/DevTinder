@@ -1,61 +1,84 @@
-# DevTinder
+# DevTinder Backend
 
-A Tinder-like web application for developers to connect, collaborate, and network with each other.
+DevTinder is a Tinder-inspired networking platform for developers.
 
-## Features
-- User authentication and profiles
-- Swipe through developer profiles
-- Match with other developers
-- Real-time messaging/chat
-- View developer portfolios and GitHub profiles
-- Filter by skills, interests, and location
+Users can create profiles, discover other developers, send connection requests, manage connections, and communicate through real-time chat.
+
+This repository contains the backend API and real-time communication server for DevTinder.
 
 ## Tech Stack
-- **Frontend:**  React
-- **Backend:** Node.js + Express.js
-- **Database:** MongoDB
 
-## Installation
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
+- Socket.IO
+- JWT Authentication
+- Cookies
+- CORS
+- bcrypt
 
-1. Clone the repository
-   ```bash
-   git clone https://github.com/pallavbharti/DevTinder.git
-   ```
+## Features
 
-2. Install dependencies
-   ```bash
-   npm install
-   ```
+### Authentication
+- User Signup
+- User Login
+- User Logout
+- JWT-based authentication
+- Authentication using cookies
+- Protected API routes using `userAuth` middleware
 
-3. Set up environment variables
-   ```bash
-   cp .env.example .env
-   ```
+### User Profile
+- View logged-in user profile
+- Edit profile information
+- Validate profile data
 
-4. Start the server
-   ```bash
-   npm start
-   ```
+### Developer Feed
+- Fetch developer profiles
+- Exclude already processed users
+- Send connection requests
+- Ignore profiles
+
+### Connection Requests
+- Send interested/ignored requests
+- Accept connection requests
+- Reject connection requests
+- View received requests
+- View accepted connections
+
+### Real-Time Chat
+- Real-time communication using Socket.IO
+- One-to-one private chat rooms
+- SHA-256 based room IDs
+- Store messages in MongoDB
+- Retrieve previous chat history
+- Populate sender information
+- Store timestamps for messages
 
 ## Project Structure
-```
+
+```text
 src/
-  app.js          - Main application entry point
-  routes/         - API routes
-  controllers/    - Business logic
-  models/         - Database schemas
-  config/         - Configuration files
-```
-
-## API Endpoints
-- `POST /auth/register` - Register new user
-- `POST /auth/login` - Login user
-- `GET /users` - Get developer profiles
-- `POST /matches` - Create a match
-- `GET /messages` - Fetch messages
-
-## Contributing
-Feel free to fork and submit pull requests.
-
-## License
-MIT
+├── app.js
+│
+├── config/
+│   └── database.js
+│
+├── middlewares/
+│   └── auth.js
+│
+├── models/
+│   ├── user.js
+│   ├── connectionRequest.js
+│   └── chat.js
+│
+├── routes/
+│   ├── auth.js
+│   ├── profile.js
+│   ├── request.js
+│   ├── user.js
+│   └── chat.js
+│
+└── utils/
+    ├── validation.js
+    └── socket.js
