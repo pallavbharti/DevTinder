@@ -1,9 +1,11 @@
 require("dotenv").config();
+require("./utils/cronjob");
 
 const express = require('express');
 const connectDB = require('./config/database');
 const cors = require('cors');
 const cookieParser = require("cookie-parser");
+
 
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
@@ -41,8 +43,10 @@ app.get("/", (req, res) => {
 });
 connectDB().then(() => {
   console.log("Database connected successfully");
-  server.listen(process.env.PORT, () => {
-    console.log("Server is running on port 7777");
+  const PORT = process.env.PORT || 7777;
+
+  server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
   });
 }).catch((err) => {
   console.error("Database connection failed", err);
