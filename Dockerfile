@@ -1,0 +1,8 @@
+FROM node:22-bookworm-slim
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY . .
+EXPOSE 7777
+USER node
+CMD ["node", "src/app.js"]
