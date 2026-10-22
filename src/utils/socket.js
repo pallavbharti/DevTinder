@@ -1,3 +1,4 @@
+const allowedOrigins = require("../config/allowedOrigins");
 const { Server } = require("socket.io");
 const crypto = require("crypto");
 const mongoose = require("mongoose"); // NEW: markSeen mein ObjectId banane ke liye
@@ -13,7 +14,7 @@ const getSecretRoomId = (userId, targetUserId) => {
 const initializeSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: allowedOrigins,
       credentials: true,
     },
   });

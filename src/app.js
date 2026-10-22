@@ -2,16 +2,18 @@ require("dotenv").config();
 require("./utils/cronjob");
 
 const express = require('express');
+
 const connectDB = require('./config/database');
 const cors = require('cors');
 const cookieParser = require("cookie-parser");
-
+const allowedOrigins = require("./config/allowedOrigins");
 
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/request");
 const userRouter = require("./routes/user");
 const app = express();
+app.disable("x-powered-by");
 const {initializeSocket}= require("./utils/socket");
 const http = require("http");
 const server = http.createServer(app);
@@ -20,7 +22,7 @@ const chatRouter = require("./routes/chat");
 
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: allowedOrigins,
   credentials: true
 }));
 app.use(express.json());
