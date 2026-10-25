@@ -5,6 +5,14 @@ const { validateSignUpData } = require("../utils/validation");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+const isProd = process.env.NODE_ENV === "production";
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? "none" : "lax",
+};
+
 // POST /signup
 authRouter.post("/signup", async (req, res) => {
   try {
@@ -26,7 +34,7 @@ authRouter.post("/signup", async (req, res) => {
 
     res.cookie("token", token, {
       expires: new Date(Date.now() + 8 * 3600000),
-      httpOnly: true,
+      ...cookieOptions,
     });
 
     res.json({ data: user, message: "User Added Successfully" });
@@ -53,7 +61,7 @@ authRouter.post("/login", async (req, res) => {
 
     res.cookie("token", token, {
       expires: new Date(Date.now() + 8 * 3600000),
-      httpOnly: true,
+      ...cookieOptions,
     });
 
     res.send(user);
@@ -62,9 +70,11 @@ authRouter.post("/login", async (req, res) => {
     res.status(400).send("ERROR : " + err.message);
   }
 });
+
 authRouter.post("/logout",async(req,res)=>{
     res.cookie("token",null,{
         expires:new Date(Date.now()),
+        ...cookieOptions,
     });
     res.send("Logout successful");
 });
