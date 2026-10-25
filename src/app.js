@@ -12,8 +12,11 @@ const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/request");
 const userRouter = require("./routes/user");
+
 const app = express();
 app.disable("x-powered-by");
+app.set("trust proxy", 1);
+
 const {initializeSocket}= require("./utils/socket");
 const http = require("http");
 const server = http.createServer(app);
