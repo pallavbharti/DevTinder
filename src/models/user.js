@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema({
       }
     }
     },
+    age: { type: Number, min: 18 },
     about: { type: String , default: "Hello! I'm new to DevTinder. Looking forward to connecting with fellow developers!" },
     skills: { type: [String] },
     
@@ -60,4 +61,13 @@ userSchema.methods.validatePassword = async function (password) {
   const isPasswordValid = await bcrypt.compare(password, user.password);
   return isPasswordValid;
 }
+
+userSchema.set("toJSON", {
+  transform: (doc, ret) => {
+    delete ret.password;
+    delete ret.__v;
+    return ret;
+  },
+});
+
 module.exports = mongoose.model("User",userSchema);
